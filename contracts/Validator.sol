@@ -32,6 +32,11 @@ contract Validator {
         return keccak256(credentials[account].credData) == keccak256(credData);
     }
 
+    modifier authorized(address account, bytes calldata credData) {
+        require(validate(account, credData), "Specified credentials invalid");
+        _;
+    }
+
     // Update the credential for this account to the new values.
     function updateCredential(
         address account,
@@ -48,7 +53,7 @@ contract Validator {
         address account,
         bytes calldata credential,
         bytes calldata in_data)
-    virtual external payable
+    virtual external payable authorized(account, credential)
     returns (bool success, bytes memory out_data) {
         require(validate(account, credential), "Specified credentials invalid");
         // So is this going to succeed? msg.sender should be this contract which is correct

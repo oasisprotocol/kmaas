@@ -22,7 +22,7 @@ abstract contract AccountBase {
 
     // Update the controller of this account. Useful when a different
     // type of credential is to be used and a validator contract is needed.
-    function updateController(address _controller) external virtual authorized;
+    function updateController(address _controller) external virtual;
 
     // A key pair for the account.
     address public publicKey;
@@ -36,34 +36,29 @@ abstract contract AccountBase {
     function hasPermission(address grantee) public virtual view
     returns (bool);
 
-    modifier authorized {
-        require(hasPermission(msg.sender), "Message sender doesn't have permission to access this account");
-        _;
-    }
-
     function grantPermission(address grantee, uint256 expiry)
-    public virtual authorized;
-    function revokePermission(address grantee) public virtual authorized;
+    public virtual;
+    function revokePermission(address grantee) public virtual;
 
     // The remaining functions use the key pair for normal contract operations.
 
     // Sign a transaction.
-    function signEIP155(EIP155Signer.EthTx calldata txToSign)
-    public virtual view authorized
+    function signEIP155(EIP155Signer.EthTx calldata txToSign, SignatureRSV calldata signature)
+    public view virtual
     returns (bytes memory);
 
     // Sign a digest.
-    function sign(bytes32 digest)
-    public virtual view authorized
+    function sign(bytes32 digest, SignatureRSV calldata signature)
+    public virtual view
     returns (SignatureRSV memory);
 
     // Call another contract.
     function call(address in_contract, bytes memory in_data)
-    public payable virtual authorized
+    public payable virtual
     returns (bool success, bytes memory out_data);
 
     // Call another contract.
     function staticcall(address in_contract, bytes memory in_data)
-    public virtual view authorized
+    public virtual view
     returns (bool success, bytes memory out_data);
 }

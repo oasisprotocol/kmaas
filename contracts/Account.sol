@@ -13,7 +13,7 @@ contract AccountFactory is AccountFactoryBase {
 
     function clone (address starterOwner)
         // I guess there should be some specification of the type of account this should create
-        public override
+        public virtual override
         returns (AccountBase acct) {
         AccountBase acc = new Account(starterOwner);
         emit AccountCreated(address(acc));
@@ -55,14 +55,19 @@ contract Account is AccountBase {
         return (grantee == controller || (permission[grantee] != 0 && permission[grantee] >= block.timestamp));
     }
 
-    function grantPermission(address grantee, uint256 expiry) public virtual override authorized {
+    modifier authorized {
         require(hasPermission(msg.sender), "Message sender doesn't have permission to access this account");
+        _;
+    }
+
+    function grantPermission(address grantee, uint256 expiry) public virtual override authorized {
+        // require(hasPermission(msg.sender), "Message sender doesn't have permission to access this account");
         permission[grantee] = expiry;
     }
 
     function revokePermission(address grantee) public virtual override authorized {
         // Should this only be available to the controller or to anybody that has permission?
-        require(hasPermission(msg.sender), "Message sender doesn't have permission to access this account");
+        // require(hasPermission(msg.sender), "Message sender doesn't have permission to access this account");
         permission[grantee] = 0;
     }
 
@@ -70,22 +75,16 @@ contract Account is AccountBase {
 
     // Sign a transaction.
     function signEIP155(EIP155Signer.EthTx calldata txToSign, SignatureRSV calldata signature)
-        public view override authorized
+        public view override
         returns (bytes memory) {
-//        require(hasPermission(msg.sender), "Message sender doesn't have permission to access this account");
-        // Here recover the signer of the signature
-        // need to use ecrecover
-        // TODO Once confirming that this works, turn this into a function modifier
-        require(hasPermission(ecrecover(abi.encodePacked(txToSign), uint8(signature.v), signature.r, signature.s)), "Message sender does not have permission to access this function");
+//        require(hasPermission(ecrecover(keccak256(abi.encode(txToSign)), uint8(signature.v), signature.r, signature.s)), "Message sender does not have permission to access this function");
         // verify that the signer is authorized
-
-
         return EIP155Signer.sign(publicKey, privateKey, txToSign);
     }
 
     // Sign a digest.
     function sign(bytes32 digest, SignatureRSV calldata signature)
-        public view override
+        public view override 
         returns (SignatureRSV memory) {
         // TODO Once confirming that this works, turn this into a function modifier
         require(hasPermission(ecrecover(digest, uint8(signature.v), signature.r, signature.s)), "Message sender does not have permission to access this function");
@@ -105,8 +104,8 @@ contract Account is AccountBase {
             privateKey,
             EIP155Signer.EthTx({
                 nonce: nonce,
-                gasPrice: tx.gasprice,
-                gasLimit: uint64(gasleft()),
+                gasPrice: 100_000_000_000,
+                gasLimit: 250000,
                 to: address(this),
                 value: 0,
                 data: abi.encodeCall(this.proxy, data),
@@ -140,15 +139,15 @@ contract Account is AccountBase {
         public payable override authorized
         returns (bool success, bytes memory out_data) {
 
-        bytes memory signed_in_data = EIP155Signer.sign(publicKey, privateKey, EIP155Signer.EthTx({
-            nonce: nonce,
-            gasPrice: tx.gasprice,
-            gasLimit: uint64(gasleft()),
-            to: in_contract,
-            value: msg.value,
-            data: in_data,
-            chainId: block.chainid
-        }));
+//        bytes memory signed_in_data = EIP155Signer.sign(publicKey, privateKey, EIP155Signer.EthTx({
+//            nonce: nonce,
+//            gasPrice: tx.gasprice,
+//            gasLimit: uint64(gasleft()),
+//            to: in_contract,
+//            value: msg.value,
+//            data: in_data,
+//            chainId: block.chainid
+//        }));
         // Ok so this doesn't work because call just expects the function data
         // Not sure if the way that I'm imagining this is even possible
 
@@ -166,16 +165,16 @@ contract Account is AccountBase {
         public override view authorized
         returns (bool success, bytes memory out_data) {
 
-        bytes memory signed_in_data = EIP155Signer.sign(publicKey, privateKey, EIP155Signer.EthTx({
-            nonce: 0,
-            gasPrice: tx.gasprice,
-            gasLimit: uint64(gasleft()),
-            to: in_contract,
-            value: 0,
-            data: in_data,
-            chainId: block.chainid
-        }));
-        (success, out_data) = in_contract.staticcall{gas: gasleft()}(signed_in_data);
+//        bytes memory signed_in_data = EIP155Signer.sign(publicKey, privateKey, EIP155Signer.EthTx({
+//            nonce: 0,
+//            gasPrice: tx.gasprice,
+//            gasLimit: uint64(gasleft()),
+//            to: in_contract,
+//            value: 0,
+//            data: in_data,
+//            chainId: block.chainid
+//        }));
+        (success, out_data) = in_contract.staticcall{gas: gasleft()}(in_data);
         if (!success) {
             assembly {
                 revert(add(out_data, 32), mload(out_data))
