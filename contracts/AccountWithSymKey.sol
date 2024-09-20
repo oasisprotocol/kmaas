@@ -5,23 +5,7 @@ import "./Account.sol";
 import "./AccountBase.sol";
 import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 
-// A contract to create per-identity account.
-contract AccountWithSymKeyFactory is AccountFactory {
-    function clone (address target)
-    public override {
-        bytes20 targetBytes = bytes20(target);
-        address contractAddr;
-        assembly {
-            let contractClone := mload(0x40)
-            mstore(contractClone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
-            mstore(add(contractClone, 0x14), targetBytes)
-            mstore(add(contractClone, 0x28), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
-            contractAddr := create(0, contractClone, 0x37)
-        }
-        emit AccountCreated(contractAddr);
-    }
-}
-
+/// @title Account that stores a set of symmetric keys to enable on-chain/off-chain encryption
 contract AccountWithSymKey is Account {
     type Key is bytes32;
 
@@ -30,10 +14,12 @@ contract AccountWithSymKey is Account {
         Account.initialize(starterOwner);
     }
 
-    // Named symmetric keys. name -> key
+    /// Named symmetric keys. name -> key
     mapping (string => Key) keys;
 
-    // Generate a named symmetric key.
+    /// @notice Generate a named symmetric key.
+    /// @param name Name for string
+    /// @param overwrite Overwrite key if it already exists
     function generateSymKey(string calldata name, bool overwrite)
     public authorized {
         require(overwrite || Key.unwrap(keys[name]) == bytes32(0), "Key already exists and overwrite is false");
@@ -41,20 +27,25 @@ contract AccountWithSymKey is Account {
         keys[name] = Key.wrap(bytes32(Sapphire.randomBytes(32, bytes(name))));
     }
 
-    // Retrieve a named symmetric key.
+    /// @notice Retrieve a named symmetric key.
+    /// @param name Key name
     function getSymKey(string calldata name)
     public view authorized
     returns (Key key) {
         key = keys[name];
     }
 
-    // Delete a named symmetric key.
+    /// @notice Delete a named symmetric key.
+    /// @param name Key name
     function deleteSymKey(string calldata name)
     external virtual authorized {
         keys[name] = Key.wrap(bytes32(0));
     }
 
-    // Encrypt in_data with the named symmetric key.
+    /// @notice Encrypt in_data with the named symmetric key.
+    /// @param name Key name
+    /// @param in_data Bytes to encrypt
+    /// @returns bytes array that contains both the nonce as well as encrypted output
     function encryptSymKey(string calldata name, bytes memory in_data)
     public virtual view authorized
     returns (bytes memory out_data) {
@@ -64,6 +55,11 @@ contract AccountWithSymKey is Account {
         out_data = abi.encode(nonce, ciphertext);
     }
 
+
+    /// @notice Decrypt in_data with the named symmetric key
+    /// @param name Key name
+    /// @param in_data Bytes to decrypt
+    /// @return Plaintext bytes
     function decryptSymKey(string calldata name, bytes memory in_data)
     public view authorized
     returns (bytes memory out_data) {
