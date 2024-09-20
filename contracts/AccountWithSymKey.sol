@@ -71,5 +71,4 @@ contract AccountWithSymKey is Account {
         out_data = Sapphire.decrypt(Key.unwrap(keys[name]), nonce, ciphertext, "");
     }
 
-    // Some key rotation stuff here?
 }

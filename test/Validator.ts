@@ -31,6 +31,8 @@ describe("Validator test", function () {
         validator = await validatorFactory.deploy(await kmaasInstance.getAddress(), cred);
         await validator.waitForDeployment();
         var validatorAddress = await validator.getAddress();
+        var addAccountTx = await validator.addAccount(kmaasAddress, cred);
+        await addAccountTx.wait();
 
         // Change the controller to the validator contract
         var expiry = Date.now() + 60*60*1000;

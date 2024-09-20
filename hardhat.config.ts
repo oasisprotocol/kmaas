@@ -1,14 +1,7 @@
 import '@oasisprotocol/sapphire-hardhat';
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-
-const TEST_HDWALLET = {
-    mnemonic: "measure pigeon simple trend lyrics grab floor airport wreck lend chronic romance",
-    path: "m/44'/60'/0'/0",
-    initialIndex: 0,
-    count: 20,
-    passphrase: "",
-};
+import "./tasks/deploy";
 
 require('dotenv').config();
 
@@ -16,7 +9,7 @@ const accounts = [process.env.PRIVATE_KEY_1, process.env.PRIVATE_KEY_2]
 
 const config: HardhatUserConfig = {
     solidity: {
-        version: '0.8.19',
+        version: '0.8.20',
         settings: {
             optimizer: {
                 enabled: true
@@ -30,11 +23,11 @@ const config: HardhatUserConfig = {
                 url: 'http://127.0.0.1:8545/',
             }
         },
-//         'sapphire': {
-//             url: 'https://sapphire.oasis.io',
-//             chainId: 0x5afe,
-//             accounts,
-//         },
+        'sapphire': {
+            url: 'https://sapphire.oasis.io',
+            chainId: 0x5afe,
+            accounts,
+        },
         'sapphire-testnet': {
             url: 'https://testnet.sapphire.oasis.dev',
             chainId: 0x5aff,

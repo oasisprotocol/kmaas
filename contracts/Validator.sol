@@ -16,9 +16,10 @@ contract Validator {
         bytes credData;
     }
 
-    mapping (address => Credential) private credentials;
+    mapping (address => Credential) internal credentials;
 
-    constructor(address account, Credential memory credential) {
+    function addAccount(address account, Credential memory credential)
+    public virtual {
         credentials[account] = credential;
     }
 
