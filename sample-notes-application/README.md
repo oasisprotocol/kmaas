@@ -1,0 +1,11 @@
+### Sample encrypted notes application
+
+.env file needs the following variables:
+PG_USER
+DATABASE_NAME
+PRIVATE_KEY
+LOGGING_ADDRESS
+NEXTAUTH_SECRET
+VALIDATOR_ADDRESS
+ACCOUNT_FACTORY_ADDRESS
+ACCOUNT_SYMKEY
