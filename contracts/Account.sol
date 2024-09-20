@@ -7,10 +7,13 @@ import {EIP155Signer} from "@oasisprotocol/sapphire-contracts/contracts/EIP155Si
 import {AccountBase, AccountFactoryBase} from "./AccountBase.sol";
 
 
-// A contract to create per-identity account.
+/// @title A contract to create per-identity account.
 contract AccountFactory is AccountFactoryBase {
+    /// Logs the address of the created account on-chain
     event AccountCreated(address contractAddress);
 
+    /// @notice Function to create a clone
+    /// @param target address of master contract to clone
     function clone(address target)
         public virtual override {
         bytes20 targetBytes = bytes20(target);
@@ -27,11 +30,10 @@ contract AccountFactory is AccountFactoryBase {
     }
 }
 
-// A base class for a per-identity account.
-// It can be extended to include additional data, for example a symmetric
-// key for encrypting and decryption off-chain data.
+/// @title A base class for a per-identity account.
+/// It can be extended to include additional data, for example a symmetric
+/// key for encrypting and decryption off-chain data.
 contract Account is AccountBase {
-    uint64 nonce;
     bool initialized;
 
     function initialize(address starterOwner)
@@ -45,7 +47,6 @@ contract Account is AccountBase {
         (pubKey, privKey) = Sapphire.generateSigningKeyPair(Sapphire.SigningAlg.Secp256k1PrehashedKeccak256, Sapphire.randomBytes(32, ""));
         publicKey = EthereumUtils.k256PubkeyToEthereumAddress(pubKey);
         privateKey = bytes32(privKey);
-        nonce = 0;
         initialized = true;
     }
 
@@ -82,24 +83,29 @@ contract Account is AccountBase {
         permission[grantee] = 0;
     }
 
-    // The remaining functions use the key pair for normal contract operations.
     function signEIP155(EIP155Signer.EthTx calldata txToSign)
         public view override authorized
         returns (bytes memory) {
         return EIP155Signer.sign(publicKey, privateKey, txToSign);
     }
 
-    // Sign a digest.
     function sign(bytes32 digest)
         public view override authorized
         returns (SignatureRSV memory) {
         return EthereumUtils.sign(publicKey, privateKey, digest);
     }
 
-    // Taken from https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/onchain-signer/contracts/Gasless.sol#L23
+    /// @notice Create a proxy transaction that the `proxy` function will then execute
+    /// This is helpful for using this account as a Gasless Relayer and code is taken from
+    /// https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/onchain-signer/contracts/Gasless.sol#L23
+    /// @param in_contract Address of contract to call
+    /// @param in_data Data to pass to the contract
+    /// @param nonce Nonce for the transaction
+    /// @returns Transaction encoded in EIP-155 format with signature
     function makeProxyTx(
         address in_contract,
-        bytes memory in_data
+        bytes memory in_data,
+        uint64 nonce
     ) external view authorized
     returns (bytes memory output) {
         bytes memory data = abi.encode(in_contract, in_data);
@@ -120,6 +126,10 @@ contract Account is AccountBase {
         );
     }
 
+
+    /// @notice Function that is called by the makeProxyTx function once the signed transaction
+    /// is submitted
+    /// @param data Data passed in by makeProxyTx that is unpacked into (address, bytes)
     function proxy(bytes memory data) external authorized payable {
         (address addr, bytes memory subcallData) = abi.decode(
             data,
@@ -139,7 +149,10 @@ contract Account is AccountBase {
     }
 
 
-    // Call another contract.
+    /// @notice Call another contract. Useful if other contracts depend on authorization from this one
+    /// This function is potentially state-changing and is payable as well
+    /// @param in_contract contract to call
+    /// @param in_data Data to pass in for contract
     function call(address in_contract, bytes memory in_data)
         public payable override authorized
         returns (bool success, bytes memory out_data) {
@@ -152,7 +165,10 @@ contract Account is AccountBase {
         }
     }
 
-    // Call another contract.
+    /// @notice Staticcall another contract. Useful if other contracts depend on authorization from this one
+    /// Since this function uses staticcall it should only be used to call view/pure functions
+    /// @param in_contract contract to call
+    /// @param in_data Data to pass in for contract
     function staticcall(address in_contract, bytes memory in_data)
         public override view authorized
         returns (bool success, bytes memory out_data) {
