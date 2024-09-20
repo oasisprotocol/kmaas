@@ -32,7 +32,3 @@ it can forward calls made to it after a user authenticates with previously set c
 to dApps using mechanisms that they are familiar with, and maintains a mapping of KMaaS accounts to credentials to enable an application to maintain
 one validator for all KMaaS accounts they interact with.
 
-
-
-
-
