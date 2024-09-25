@@ -13,32 +13,30 @@ task('deploy', 'Deploy the specified contract')
         console.log(`Address: ${address}`);
     });
 
-task('kmaas_setup', 'Set up KMaaS account and Validator contract')
+task('notes_setup', 'Set up required contracts for sample application')
     .setAction(async (args, hre: HardhatRuntimeEnvironment) => {
+        const kmaasFactoryFactory = await hre.ethers.getContractFactory("AccountFactory");
+        const kmaasFactory = await kmaasFactoryFactory.deploy();
+        await kmaasFactory.waitForDeployment();
+        const kmaasFactoryAddress = await kmaasFactory.getAddress();
+        console.log(`Kmaas Factory Address ${kmaasFactoryAddress}`);
+
         const kmaasContractFactory = await hre.ethers.getContractFactory("AccountWithSymKey");
         const kmaasContract = await kmaasContractFactory.deploy();
         await kmaasContract.waitForDeployment();
-        const [account] = await hre.ethers.getSigners();
-        const initializeTx = await kmaasContract.initialize(account.address);
-        await initializeTx.wait();
-        const kmaasAddress = await kmaasContract.getAddress();
-        console.log(`KMaaS contract at ${kmaasAddress} initialized`)
-        const publicKey = await kmaasContract.publicKey();
-        console.log(`KMaaS contract has public key ${publicKey}`);
+        const kmaasMasterContractAddr = await kmaasContract.getAddress();
+        console.log(`Address of master contract ${kmaasMasterContractAddr}`);
 
         const validatorContractFactory = await hre.ethers.getContractFactory("ValidatorWithSiwe");
         const validatorContract = await validatorContractFactory.deploy("localhost");
         await validatorContract.waitForDeployment();
-        const cred = {
-              'credType': 2,
-              'credData': hre.ethers.encodeBytes32String("test123")
-          };
-        const addAccountTx = await validatorContract.addAccount(await kmaasContract.getAddress(), cred);
-        await addAccountTx.wait();
+
         const validatorAddress = await validatorContract.getAddress();
         console.log(`Validator contract at ${validatorAddress} initialized`);
 
-        const updateControllerTx = await kmaasContract.updateController(validatorAddress);
-        await updateControllerTx.wait();
-        console.log("Kmaas contract now has validator controller");
+        const loggingFactory = await hre.ethers.getContractFactory("Logging");
+        const loggingContract = await loggingFactory.deploy();
+        await loggingContract.waitForDeployment();
+        const loggingContractAddr = await loggingContract.getAddress();
+        console.log(`Logging contract at ${loggingContractAddr}`);
     });

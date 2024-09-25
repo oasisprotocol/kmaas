@@ -5,23 +5,6 @@ import "./Account.sol";
 import "./AccountBase.sol";
 import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 
-// A contract to create per-identity account.
-contract AccountWithSymKeyFactory is AccountFactory {
-    function clone (address target)
-    public override {
-        bytes20 targetBytes = bytes20(target);
-        address contractAddr;
-        assembly {
-            let contractClone := mload(0x40)
-            mstore(contractClone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
-            mstore(add(contractClone, 0x14), targetBytes)
-            mstore(add(contractClone, 0x28), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
-            contractAddr := create(0, contractClone, 0x37)
-        }
-        emit AccountCreated(contractAddr);
-    }
-}
-
 contract AccountWithSymKey is Account {
     type Key is bytes32;
 
