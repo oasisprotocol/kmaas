@@ -6,7 +6,7 @@ import {EIP155Signer} from "@oasisprotocol/sapphire-contracts/contracts/EIP155Si
 
 // A contract to create per-identity account.
 abstract contract AccountFactoryBase {
-    function clone (address starterOwner)
+    function createProxy(address target)
     public virtual;
 }
 
@@ -31,7 +31,7 @@ abstract contract AccountBase {
     mapping (address => uint256) permission;
 
     /// @notice Function to check permissions
-    /// @param Address to check
+    /// @param grantee Address to check
     function hasPermission(address grantee) public virtual view
     returns (bool);
 
