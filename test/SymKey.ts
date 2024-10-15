@@ -18,7 +18,7 @@ describe("Symmetric Keys test", () => {
         await masterContract.waitForDeployment();
         const masterContractAddr = await masterContract.getAddress();
 
-        const factoryContractFactory = await ethers.getContractFactory('AccountWithSymKeyFactory', account);
+        const factoryContractFactory = await ethers.getContractFactory('AccountFactory', account);
         const factoryContract = await factoryContractFactory.deploy();
         await factoryContract.waitForDeployment();
         const kmaasTx = await factoryContract.clone(masterContractAddr);

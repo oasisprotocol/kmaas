@@ -2,8 +2,7 @@
 pragma solidity ^0.8.9;
 
 
-// A validator contract can forward calls to an account contract when
-// its credential is validated.
+/// @title Contract to forward calls to an account once credentials are validated
 contract Validator {
     type CredentialType is uint32;
 
@@ -16,13 +15,19 @@ contract Validator {
         bytes credData;
     }
 
-    mapping (address => Credential) private credentials;
+    mapping (address => Credential) internal credentials;
 
-    constructor(address account, Credential memory credential) {
+    /// @notice Add an account with the specified credential to this validator
+    /// @param account Address of account
+    /// @param credential Credential struct with necessary data
+    function addAccount(address account, Credential memory credential)
+    public virtual {
         credentials[account] = credential;
     }
 
-    // Validate the provided credential data.
+    /// @notice Validates provided credential for given account
+    /// @param account Address of account
+    /// @param credData credential bytes to authenticate with
     function validate(address account, bytes calldata credData)
     public virtual view
     returns (bool) {
@@ -38,7 +43,11 @@ contract Validator {
         _;
     }
 
-    // Update the credential for this account to the new values.
+    /// @notice Update the credential for this account to the new values.
+    /// @param account Account to update
+    /// @param credData Current credentials to authenticate
+    /// @param newCredType New credential type
+    /// @param newCredData New credential data
     function updateCredential(
         address account,
         bytes calldata credData,
@@ -48,7 +57,12 @@ contract Validator {
         credentials[account] = Credential(newCredType, newCredData);
     }
 
-    // Call a view function in the account, after credential is validated.
+    /// @notice Call a view/pure function in the account, after credential is validated.
+    /// @param account Account to call
+    /// @param credential Credentials to authorize with
+    /// @param in_data Encoded function data to pass to account
+    /// @return success Whether the call was successful
+    /// @return out_data Data returned by contract
     function callAccount(
         address account,
         bytes calldata credential,
@@ -63,7 +77,12 @@ contract Validator {
         }
     }
 
-    // Call a state-changing function in the account after credential is validated
+    /// @notice Call a state-changing function in the account, after credential is validated.
+    /// @param account Account to call
+    /// @param credential Credentials to authorize with
+    /// @param in_data Encoded function data to pass to account
+    /// @return success Whether the call was successful
+    /// @return out_data Data returned by contract
     function transactAccount(
         address account,
         bytes calldata credential,
