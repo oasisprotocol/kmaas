@@ -16,13 +16,13 @@ describe('Basic test', () => {
         this.timeout(100000);
         [account1, account2] = await ethers.getSigners();
         const kmaasContractFactory = await ethers.getContractFactory('Account', account1);
-        const kmaasMasterContract = await kmaasContractFactory.deploy()
+        var kmaasMasterContract = await kmaasContractFactory.deploy()
         await kmaasMasterContract.waitForDeployment();
         const kmaasMasterContractAddr = await kmaasMasterContract.getAddress();
         const factory = await ethers.getContractFactory('AccountFactory', account1);
         const contract = await factory.deploy();
         await contract.waitForDeployment();
-        const kmaasTx = await contract.clone(kmaasMasterContractAddr);
+        const kmaasTx = await contract.createProxy(kmaasMasterContractAddr);
         const kmaasReceipt = await kmaasTx.wait();
         // Grab the KMaaS Account address from the events of the transaction
         const kmaasAddress = kmaasReceipt.logs[0].args[0];
