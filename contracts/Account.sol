@@ -13,7 +13,7 @@ contract AccountFactory is AccountFactoryBase {
     event AccountCreated(address contractAddress);
 
     /// @notice This function creates a proxy of the target contract as per ERC-1167.
-    /// @param address of target master contract to clone
+    /// @param target address of target master contract to clone
     function createProxy(address target)
         public virtual override {
         // Note that this function creates a proxy contract to make contract deployment much cheaper. However, subsequent calls
