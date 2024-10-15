@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 
 /// @title Contract to forward calls to an account once credentials are validated
 contract Validator {
+    error InvalidCredentials();
     type CredentialType is uint32;
 
     // Some examples defined. Can be extended to other types.
@@ -39,7 +40,9 @@ contract Validator {
     }
 
     modifier authorized(address account, bytes calldata credData) {
-        require(validate(account, credData), "Specified credentials invalid");
+        if (!validate(account, credData)) {
+            revert InvalidCredentials();
+        }
         _;
     }
 

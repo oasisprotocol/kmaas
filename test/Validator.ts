@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 
 const { expect } = require("chai");
+import { ErrorDecoder } from 'ethers-decode-error';
 
 
 describe("Validator test", function () {
@@ -28,8 +29,9 @@ describe("Validator test", function () {
         };
 
         const validatorFactory = await ethers.getContractFactory('Validator', account1);
-        validator = await validatorFactory.deploy(await kmaasInstance.getAddress(), cred);
-        await validator.waitForDeployment();
+        const validatorTx = await validatorFactory.deploy();
+        const val = await validatorTx.waitForDeployment();
+        validator = val.connect(account1);
         var validatorAddress = await validator.getAddress();
         var addAccountTx = await validator.addAccount(kmaasAddress, cred);
         await addAccountTx.wait();
@@ -79,4 +81,5 @@ describe("Validator test", function () {
         var recoveredAddress = ethers.verifyMessage(text, digestSignatureObj)
         expect(recoveredAddress).to.equal(publicKey);
     });
+
 })
