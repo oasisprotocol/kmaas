@@ -32,18 +32,11 @@ Note that because of the limited size of the on-chain call stack, the amount of 
 #### Application setup
 
 The application is currently configured to run locally against the `sapphire-localnet` [image](https://github.com/oasisprotocol/oasis-web3-gateway/tree/main/docker) 
-and a local Postgres database. The Postgres database requires the `pg_ctl` command-line utility installed and the database can be started with
-`pg_ctl start -D $DIRECTORY` with `$DIRECTORY` being a directory initialized to store Postgres state. The `sapphire-localnet` image can be started
-with `docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet` with optional flags `-test-mnemonic -n 5` specifying that the same
-5 accounts should be created and funded each time the container is run. The notes application can be started with `npm run dev` run in the `sample-notes-application`
-directory once dependencies are installed. Finally, the application requires an `.env` file populated with the following values:
-
-`DATABASE_NAME`: The database to connect to of the Postgres instance
-`PG_USER`: The user to connect to Postgres with
-`PRIVATE_KEY`: A private key that will be used by the application to view chain state and deploy contracts
-`LOGGING_ADDRESS`: The address of the contract deployed to log changes to notes
-`NEXTAUTH_SECRET`: The secret for NextAuth to use to encrypt session data. This can be generated with `openssl rand -base64 32`
-`VALIDATOR_ADDRESS`: The address of the validator contract used in this application. For authorization to work correctly, this will need to be 
-a `ValidatorWithSiwe` contract
-`ACCOUNT_FACTORY_ADDRESS`: The address of a `AccountFactory` contract
-`ACCOUNT_SYMKEY`: The address of the master `AccountWithSymKey` contract to clone for each user
+and an in-memory SQLite3 database, so data does not persist after application shutdown. The steps to run the application are as follows:
+1. Start the `sapphire-localnet` Docker container with the command `docker run -it -p8545:8545 -p8546:8546 ghcr.io/oasisprotocol/sapphire-localnet -test-mnemonic -n 5`.
+Note that if you are on an M series Mac, you must add the `--platform linux/x86_64` flag.
+2. In the root `kmaas` directory, run `pnpm install` and `pnpm hardhat compile` 
+3. Run `pnpm hardhat notes_setup --network sapphire-localnet`. Copy the output of the `notes_setup` command into
+`sample-notes-application/.env`
+4. Run `npm install` in `kmaas/sample-notes-application`.
+5. Run `npm run dev` in `kmaas/sample-notes-application`. The application should be live on `http://localhost:3000`!
