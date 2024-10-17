@@ -38,14 +38,26 @@ export async function logNoteChange(method: string, note: any) {
 
     // Prepare transaction to sign
     const loggingContract = new ethers.Contract(loggingAddr, LOGGING_ABI, account);
-    const loggingFunctionData = loggingContract.interface.encodeFunctionData(method, [hash]);
+    // The proxy function in the notes application decodes the data it's passed into address and bytes function data
+    // The notes application operates as a trusted forwarder for the meta-transaction as per ERC 2771 such that the
+    // end user does not have to pay gas. Otherwise, it would be necessary to fund the public key associated
+    // with the KMaaS account for the KMaaS account to submit logging transactions
+    const loggingFunctionData = ethers.AbiCoder.defaultAbiCoder().encode(["address", "bytes"], [
+        process.env.LOGGING_ADDRESS,
+        loggingContract.interface.encodeFunctionData(method, [hash])
+    ]);
+
+    // Get the notes contract
+    const notesContract = new ethers.Contract(process.env.NOTES_ADDRESS, NOTES_ABI, account);
+    const proxyFunctionData = notesContract.interface.encodeFunctionData("proxy", [loggingFunctionData]);
+
     var loggingTx = {
         'nonce': nonce,
         'gasPrice': 100000000000,
         'gasLimit': 250000,
-        'to': loggingAddr,
+        'to': process.env.NOTES_ADDRESS,
         'value': 0,
-        'data': loggingFunctionData,
+        'data': proxyFunctionData,
         'chainId': '0x5afd'
     }
 

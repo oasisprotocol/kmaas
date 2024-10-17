@@ -1374,96 +1374,72 @@ export const ACCOUNT_FACTORY_ABI = [
  ];
 
 export const NOTES_ABI = [
-                      {
-                        "anonymous": false,
-                        "inputs": [
-                          {
-                            "indexed": false,
-                            "internalType": "address",
-                            "name": "kmaasAddress",
-                            "type": "address"
-                          }
-                        ],
-                        "name": "UserCreated",
-                        "type": "event"
-                      },
-                      {
-                        "inputs": [
-                          {
-                            "internalType": "address",
-                            "name": "validatorAddress",
-                            "type": "address"
-                          },
-                          {
-                            "components": [
-                              {
-                                "internalType": "CredentialType",
-                                "name": "credType",
-                                "type": "uint32"
-                              },
-                              {
-                                "internalType": "bytes",
-                                "name": "credData",
-                                "type": "bytes"
-                              }
-                            ],
-                            "internalType": "struct Credential",
-                            "name": "cred",
-                            "type": "tuple"
-                          }
-                        ],
-                        "name": "createUser",
-                        "outputs": [
-                          {
-                            "internalType": "address",
-                            "name": "kmaasAddress",
-                            "type": "address"
-                          }
-                        ],
-                        "stateMutability": "nonpayable",
-                        "type": "function"
-                      },
-                      {
-                        "inputs": [
-                          {
-                            "internalType": "address",
-                            "name": "validatorAddress",
-                            "type": "address"
-                          },
-                          {
-                            "components": [
-                              {
-                                "internalType": "CredentialType",
-                                "name": "credType",
-                                "type": "uint32"
-                              },
-                              {
-                                "internalType": "bytes",
-                                "name": "credData",
-                                "type": "bytes"
-                              }
-                            ],
-                            "internalType": "struct Credential",
-                            "name": "cred",
-                            "type": "tuple"
-                          }
-                        ],
-                        "name": "createUserTest",
-                        "outputs": [],
-                        "stateMutability": "nonpayable",
-                        "type": "function"
-                      },
-                      {
-                        "inputs": [
-                          {
-                            "internalType": "bytes",
-                            "name": "data",
-                            "type": "bytes"
-                          }
-                        ],
-                        "name": "proxy",
-                        "outputs": [],
-                        "stateMutability": "payable",
-                        "type": "function"
-                      }
-                    ];
+     {
+       "anonymous": false,
+       "inputs": [
+         {
+           "indexed": false,
+           "internalType": "address",
+           "name": "kmaasAddress",
+           "type": "address"
+         },
+         {
+           "indexed": false,
+           "internalType": "address",
+           "name": "publicKey",
+           "type": "address"
+         }
+       ],
+       "name": "UserCreated",
+       "type": "event"
+     },
+     {
+       "inputs": [
+         {
+           "internalType": "address",
+           "name": "validatorAddress",
+           "type": "address"
+         },
+         {
+           "components": [
+             {
+               "internalType": "CredentialType",
+               "name": "credType",
+               "type": "uint32"
+             },
+             {
+               "internalType": "bytes",
+               "name": "credData",
+               "type": "bytes"
+             }
+           ],
+           "internalType": "struct Credential",
+           "name": "cred",
+           "type": "tuple"
+         }
+       ],
+       "name": "createUser",
+       "outputs": [
+         {
+           "internalType": "address",
+           "name": "kmaasAddress",
+           "type": "address"
+         }
+       ],
+       "stateMutability": "nonpayable",
+       "type": "function"
+     },
+     {
+       "inputs": [
+         {
+           "internalType": "bytes",
+           "name": "data",
+           "type": "bytes"
+         }
+       ],
+       "name": "proxy",
+       "outputs": [],
+       "stateMutability": "payable",
+       "type": "function"
+     }
+   ];
