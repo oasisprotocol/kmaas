@@ -45,7 +45,7 @@ contract AccountWithSymKey is Account {
     /// @notice Encrypt in_data with the named symmetric key.
     /// @param name Key name
     /// @param in_data Bytes to encrypt
-    /// @returns bytes array that contains both the nonce as well as encrypted output
+    /// @return out_data bytes array that contains both the nonce as well as encrypted output
     function encryptSymKey(string calldata name, bytes memory in_data)
     public virtual view authorized
     returns (bytes memory out_data) {
@@ -59,7 +59,7 @@ contract AccountWithSymKey is Account {
     /// @notice Decrypt in_data with the named symmetric key
     /// @param name Key name
     /// @param in_data Bytes to decrypt
-    /// @return Plaintext bytes
+    /// @return out_data Plaintext bytes
     function decryptSymKey(string calldata name, bytes memory in_data)
     public view authorized
     returns (bytes memory out_data) {

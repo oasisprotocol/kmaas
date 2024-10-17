@@ -12,16 +12,24 @@ contract AccountFactory is AccountFactoryBase {
     /// Logs the address of the created account on-chain
     event AccountCreated(address contractAddress);
 
-    /// @notice Function to create a clone
-    /// @param target address of master contract to clone
-    function clone(address target)
+    /// @notice This function creates a proxy of the target contract as per ERC-1167.
+    /// @param target address of target master contract to clone
+    function createProxy(address target)
         public virtual override {
+        // Note that this function creates a proxy contract to make contract deployment much cheaper. However, subsequent calls
+        // to the proxy contract are forwarded to the original contract instance making subsequent invocations slightly more expensive.
+        // As a result, consider the number of calls your application will make to the KMaaS account to determine whether creating
+        // a proxy contract or deploying the Account contract itself is gas-optimal.
         bytes20 targetBytes = bytes20(target);
         address contractAddr;
         assembly {
             let contractClone := mload(0x40)
+            // This contains 1. the init code to deploy the contract 2. bytes to copy calldata into memory and push the address
+            // of the target contract
             mstore(contractClone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
+            // Store the address of the target contract
             mstore(add(contractClone, 0x14), targetBytes)
+            // This contains the code to execute delegatecall to the target address, as well as return/revert based on function execution
             mstore(add(contractClone, 0x28), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
             contractAddr := create(0, contractClone, 0x37)
         }
@@ -93,59 +101,6 @@ contract Account is AccountBase {
         public view override authorized
         returns (SignatureRSV memory) {
         return EthereumUtils.sign(publicKey, privateKey, digest);
-    }
-
-    /// @notice Create a proxy transaction that the `proxy` function will then execute
-    /// This is helpful for using this account as a Gasless Relayer and code is taken from
-    /// https://github.com/oasisprotocol/sapphire-paratime/blob/main/examples/onchain-signer/contracts/Gasless.sol#L23
-    /// @param in_contract Address of contract to call
-    /// @param in_data Data to pass to the contract
-    /// @param nonce Nonce for the transaction
-    /// @returns Transaction encoded in EIP-155 format with signature
-    function makeProxyTx(
-        address in_contract,
-        bytes memory in_data,
-        uint64 nonce
-    ) external view authorized
-    returns (bytes memory output) {
-        bytes memory data = abi.encode(in_contract, in_data);
-
-        return
-        EIP155Signer.sign(
-            publicKey,
-            privateKey,
-            EIP155Signer.EthTx({
-                nonce: nonce,
-                gasPrice: 100_000_000_000,
-                gasLimit: 250000,
-                to: address(this),
-                value: 0,
-                data: abi.encodeCall(this.proxy, data),
-                chainId: block.chainid
-            })
-        );
-    }
-
-
-    /// @notice Function that is called by the makeProxyTx function once the signed transaction
-    /// is submitted
-    /// @param data Data passed in by makeProxyTx that is unpacked into (address, bytes)
-    function proxy(bytes memory data) external authorized payable {
-        (address addr, bytes memory subcallData) = abi.decode(
-            data,
-            (address, bytes)
-        );
-        (bool success, bytes memory outData) = addr.call{value: msg.value}(
-            subcallData
-        );
-        if (!success) {
-            // Add inner-transaction meaningful data in case of error.
-            assembly {
-                revert(add(outData, 32), mload(outData))
-            }
-        }
-
-        nonce += 1;
     }
 
 

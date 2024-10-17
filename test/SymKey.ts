@@ -21,7 +21,7 @@ describe("Symmetric Keys test", () => {
         const factoryContractFactory = await ethers.getContractFactory('AccountFactory', account);
         const factoryContract = await factoryContractFactory.deploy();
         await factoryContract.waitForDeployment();
-        const kmaasTx = await factoryContract.clone(masterContractAddr);
+        const kmaasTx = await factoryContract.createProxy(masterContractAddr);
         const kmaasReceipt = await kmaasTx.wait();
 
         // Grab the KMaaS Account address from the events of the transaction
