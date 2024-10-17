@@ -1,6 +1,6 @@
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { SiweMessage } from 'siwe';
-import { getPublicKey } from "/src/lib/pg-client";
+import { getPublicKey } from "/src/lib/db-client";
 import { signIn, getCsrfToken } from "next-auth/react";
 import { handleLogin } from "/src/lib/kmaas-client"
 

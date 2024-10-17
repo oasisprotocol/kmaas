@@ -2,7 +2,7 @@
 
 import { ethers } from "ethers";
 import {createHash} from "crypto";
-import {runQuery} from "/src/lib/pg-client";
+import {runQuery, fetchQuery} from "/src/lib/db-client";
 import {LOGGING_ABI, KMAAS_SYMKEY_ABI, VALIDATOR_SIWE_ABI, ACCOUNT_FACTORY_ABI} from "/src/lib/AbiDefinitions";
 import {getServerSession} from "next-auth/next";
 import {options} from "/src/app/api/auth/[...nextauth]/options.ts";
@@ -15,8 +15,8 @@ async function retrieveKmaasAndValidator(username: string = "") {
         const serverSession = await getServerSession(options);
         username = serverSession.user.username;
     }
-    const queryResults = await runQuery("SELECT kmaas FROM users WHERE username=$1", [username]);
-    const kmaas = queryResults.rows[0].kmaas;
+    const queryResults = await fetchQuery("SELECT kmaas FROM users WHERE username=?", [username]);
+    const kmaas = queryResults[0].kmaas;
     const kmaasContract = new ethers.Contract(kmaas, KMAAS_SYMKEY_ABI, account);
     const validatorContract = new ethers.Contract(process.env.VALIDATOR_ADDRESS, VALIDATOR_SIWE_ABI, account);
     return [kmaasContract, validatorContract];
@@ -28,8 +28,8 @@ export async function logNoteChange(method: string, note: any) {
     const username = serverSession.user.username;
     const bearerToken = serverSession.user.bearerToken;
 
-    const queryResults = await runQuery("SELECT public_key FROM users WHERE username=$1", [username]);
-    const publicKey = queryResults.rows[0].public_key;
+    const queryResults = await fetchQuery("SELECT public_key FROM users WHERE username=?", [username]);
+    const publicKey = queryResults[0].public_key;
 
     const loggingAddr = process.env.LOGGING_ADDRESS;
     const provider = ethers.getDefaultProvider("http://localhost:8545/");
@@ -63,29 +63,29 @@ export async function logNoteChange(method: string, note: any) {
 }
 
 export async function createNote(title: string) {
-    var results = await runQuery("SELECT nextval($1)::integer", ['note_id']);
-    var noteId = results.rows[0].nextval;
+    var results = await fetchQuery("SELECT seq + 1 AS next_id FROM sqlite_sequence WHERE name = ?", ['notes']);
+    var noteId = results[0].next_id;
     var note = {
         id: noteId,
         title: title,
         content: ""
     };
     var encryptedData = await encryptNote(note);
-    var query = "INSERT INTO notes(id, encrypted_bytes) VALUES ($1, $2)";
+    var query = "INSERT INTO notes(id, encrypted_bytes) VALUES (?, ?)";
     await runQuery(query, [noteId, encryptedData]);
     return note;
 }
 
 export async function saveNote(note: any) {
     var encryptedData = await encryptNote(note);
-    var query = "UPDATE notes SET encrypted_bytes=$1 WHERE id = $2";
+    var query = "UPDATE notes SET encrypted_bytes=? WHERE id = ?";
     await runQuery(query, [encryptedData, note.id]);
 }
 
 export async function retrieveNotes(): any[] {
     var query = "SELECT encrypted_bytes FROM notes";
-    var result = await runQuery(query, []);
-    var notes = await Promise.all(result.rows.map(async (row) => {
+    var result = await fetchQuery(query, []);
+    var notes = await Promise.all(result.map(async (row) => {
         const note = await decryptNote(row.encrypted_bytes);
         return note;
     }));
