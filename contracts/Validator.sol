@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+type CredentialType is uint32;
+struct Credential {
+    CredentialType credType;
+    bytes credData;
+}
 
 /// @title Contract to forward calls to an account once credentials are validated
 contract Validator {
-    type CredentialType is uint32;
+    error InvalidCredentials();
 
     // Some examples defined. Can be extended to other types.
     CredentialType public constant CUSTODIAN = CredentialType.wrap(1);
     CredentialType public constant PASSWORD = CredentialType.wrap(2);
-
-    struct Credential {
-        CredentialType credType;
-        bytes credData;
-    }
 
     mapping (address => Credential) internal credentials;
 

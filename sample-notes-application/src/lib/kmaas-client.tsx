@@ -3,7 +3,7 @@
 import { ethers } from "ethers";
 import {createHash} from "crypto";
 import {runQuery, fetchQuery} from "/src/lib/db-client";
-import {LOGGING_ABI, KMAAS_SYMKEY_ABI, VALIDATOR_SIWE_ABI, ACCOUNT_FACTORY_ABI} from "/src/lib/AbiDefinitions";
+import {LOGGING_ABI, KMAAS_SYMKEY_ABI, VALIDATOR_SIWE_ABI, ACCOUNT_FACTORY_ABI, NOTES_ABI} from "/src/lib/AbiDefinitions";
 import {getServerSession} from "next-auth/next";
 import {options} from "/src/app/api/auth/[...nextauth]/options.ts";
 import {crypto} from "crypto";
@@ -146,38 +146,16 @@ export async function handleLogin(username: string, siweMessage: string, passwor
 export async function createUser(username: string, password: string) {
     const provider = ethers.getDefaultProvider("http://localhost:8545/");
     const account = new ethers.Wallet(process.env.PRIVATE_KEY).connect(provider);
-    const validatorContract = new ethers.Contract(process.env.VALIDATOR_ADDRESS, VALIDATOR_SIWE_ABI, account);
-    // Call clone() on KMaaS factory to deploy an instance of the factory
-    const masterKmaasContractAddr = process.env.ACCOUNT_SYMKEY;
-    const kmaasFactory = new ethers.Contract(process.env.ACCOUNT_FACTORY_ADDRESS, ACCOUNT_FACTORY_ABI, account);
-    // Get the emitted event to get the address
-    const kmaasFactoryTx = await kmaasFactory.clone(masterKmaasContractAddr);
-    const kmaasFactoryReceipt = await kmaasFactoryTx.wait();
-    const contractAddr = kmaasFactoryReceipt.logs[0].args[0];
-    // Set the controller of KMaaS to the validator contract
-    const kmaasContract = new ethers.Contract(contractAddr, KMAAS_SYMKEY_ABI, account);
-    const kmaasInit = await kmaasContract.initialize(account.address);
-    await kmaasInit.wait();
-    // Generate the keys for signing tokens and encrypting notes
-    const genKey1Tx = await kmaasContract.generateSymKey("notes", false);
-    await genKey1Tx.wait();
-    const genKey2Tx = await kmaasContract.generateSymKey("tokenSigner", false);
-    await genKey2Tx.wait();
-    // Change the controller
-    const changeControllerTx = await kmaasContract.updateController(process.env.VALIDATOR_ADDRESS);
-    await changeControllerTx.wait();
-    // Add the account to validator
-    const cred = {
+    const notesContract = new ethers.Contract(process.env.NOTES_ADDRESS, NOTES_ABI, account);
+    var cred = {
         'credType': 2,
         'credData': ethers.encodeBytes32String(password)
-    };
-    const addAccountTx = await validatorContract.addAccount(contractAddr, cred);
-    await addAccountTx.wait()
-    const publicKey = await kmaasContract.publicKey();
-    // Initially the publicKey address so that the user can make transactions
-    const fundTx = await account.sendTransaction({to: publicKey, value: ethers.parseEther("0.5")})
-    await fundTx.wait()
-    // Add the user info to the backend store
-    await runQuery("INSERT INTO users(username, kmaas, public_key) VALUES ($1, $2, $3)", [username, contractAddr, publicKey]);
+    }
+    const tx = await notesContract.createUser(process.env.VALIDATOR_ADDRESS, cred);
+    const receipt = await tx.wait();
+    const contractAddr = receipt.logs[0].args[0];
+    const publicKey = receipt.logs[0].args[1];
+    // Here get the event that's emitted and grab the public key and address of KMaaS
+    await runQuery("INSERT INTO users(username, kmaas, public_key) VALUES (?, ?, ?)", [username, contractAddr, publicKey]);
 }
 
