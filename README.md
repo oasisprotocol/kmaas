@@ -31,5 +31,3 @@ This is a contract to make interfacing with KMaaS accounts easier. If set to the
 it can forward calls made to it after a user authenticates with previously set credentials (e.g. passwords). This allows users to authenticate
 to dApps using mechanisms that they are familiar with, and maintains a mapping of KMaaS accounts to credentials to enable an application to maintain
 one validator for all KMaaS accounts they interact with.
-
-

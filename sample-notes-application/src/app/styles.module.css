@@ -1,0 +1,100 @@
+.app {
+  display: flex;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.sidebar {
+  width: 300px;
+  background-color: #f3f4f6;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.new-note-btn {
+  background-color: #007aff;
+  color: white;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.note-list {
+  margin-top: 10px;
+}
+
+.note-item {
+  padding: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.note-item.active {
+  background-color: #e2e3e5;
+}
+
+.note-title {
+  font-size: 16px;
+  color: #333;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+}
+
+/* NoteEditor.css */
+.note-editor {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.no-active-note {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  color: #888;
+}
+
+.note-title-input {
+  font-size: 24px;
+  margin-bottom: 10px;
+  border: none;
+  outline: none;
+  width: 100%;
+  padding: 5px;
+}
+
+.note-content-textarea {
+  flex: 1;
+  font-size: 16px;
+  border: none;
+  outline: none;
+  padding: 10px;
+  resize: none;
+}
+
+.save-btn {
+  background-color: #007aff;
+  color: white;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+}
