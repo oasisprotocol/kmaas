@@ -1,70 +1,65 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.24;
 
 import "./Account.sol";
-import "./AccountBase.sol";
-import {Sapphire} from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
+import { Sapphire } from "@oasisprotocol/sapphire-contracts/contracts/Sapphire.sol";
 
-/// @title Account that stores a set of symmetric keys to enable on-chain/off-chain encryption
+/// @title Account implementation with symmetric key encryption capabilities
+/// @notice Extends base Account with symmetric key management for on-chain/off-chain encryption
 contract AccountWithSymKey is Account {
+    /// @notice Custom type for symmetric keys
     type Key is bytes32;
 
-    function initialize(address starterOwner)
-    public override {
-        Account.initialize(starterOwner);
+    /// @notice Mapping of named symmetric keys
+    /// @dev name => key
+    mapping(string => Key) private _keys;
+
+    constructor(address owner_) Account(owner_) {}
+
+    /// @notice Generates a new symmetric key with specified name
+    /// @param name_ Name to associate with the key
+    /// @param overwrite_ Whether to overwrite if key already exists
+    function generateSymKey(string calldata name_, bool overwrite_) public onlyAuthorized {
+        require(overwrite_ || Key.unwrap(_keys[name_]) == bytes32(0), "Key already exists and overwrite is false");
+        _keys[name_] = Key.wrap(bytes32(Sapphire.randomBytes(32, bytes(name_))));
     }
 
-    /// Named symmetric keys. name -> key
-    mapping (string => Key) keys;
-
-    /// @notice Generate a named symmetric key.
-    /// @param name Name for string
-    /// @param overwrite Overwrite key if it already exists
-    function generateSymKey(string calldata name, bool overwrite)
-    public authorized {
-        require(overwrite || Key.unwrap(keys[name]) == bytes32(0), "Key already exists and overwrite is false");
-
-        keys[name] = Key.wrap(bytes32(Sapphire.randomBytes(32, bytes(name))));
+    /// @notice Retrieves a symmetric key by name
+    /// @param name_ Name of the key to retrieve
+    /// @return key The symmetric key
+    function getSymKey(string calldata name_) public view onlyAuthorized returns (Key key) {
+        key = _keys[name_];
     }
 
-    /// @notice Retrieve a named symmetric key.
-    /// @param name Key name
-    function getSymKey(string calldata name)
-    public view authorized
-    returns (Key key) {
-        key = keys[name];
+    /// @notice Deletes a symmetric key
+    /// @param name_ Name of the key to delete
+    function deleteSymKey(string calldata name_) external virtual onlyAuthorized {
+        _keys[name_] = Key.wrap(bytes32(0));
     }
 
-    /// @notice Delete a named symmetric key.
-    /// @param name Key name
-    function deleteSymKey(string calldata name)
-    external virtual authorized {
-        keys[name] = Key.wrap(bytes32(0));
-    }
-
-    /// @notice Encrypt in_data with the named symmetric key.
-    /// @param name Key name
-    /// @param in_data Bytes to encrypt
-    /// @return out_data bytes array that contains both the nonce as well as encrypted output
-    function encryptSymKey(string calldata name, bytes memory in_data)
-    public virtual view authorized
-    returns (bytes memory out_data) {
-        require(Key.unwrap(keys[name]) != bytes32(0), "Requested key doesn't exist");
+    /// @notice Encrypts data using a named symmetric key
+    /// @param name_ Name of the key to use for encryption
+    /// @param data_ Data to encrypt
+    /// @return encryptedData Encoded bytes containing nonce and encrypted data
+    function encryptSymKey(
+        string calldata name_,
+        bytes memory data_
+    ) public view virtual onlyAuthorized returns (bytes memory encryptedData) {
+        require(Key.unwrap(_keys[name_]) != bytes32(0), "Requested key doesn't exist");
         bytes32 nonce = bytes32(Sapphire.randomBytes(32, ""));
-        bytes memory ciphertext = Sapphire.encrypt(Key.unwrap(keys[name]), nonce, in_data, "");
-        out_data = abi.encode(nonce, ciphertext);
+        bytes memory ciphertext = Sapphire.encrypt(Key.unwrap(_keys[name_]), nonce, data_, "");
+        encryptedData = abi.encode(nonce, ciphertext);
     }
 
-
-    /// @notice Decrypt in_data with the named symmetric key
-    /// @param name Key name
-    /// @param in_data Bytes to decrypt
-    /// @return out_data Plaintext bytes
-    function decryptSymKey(string calldata name, bytes memory in_data)
-    public view authorized
-    returns (bytes memory out_data) {
-        (bytes32 nonce, bytes memory ciphertext) = abi.decode(in_data, (bytes32, bytes));
-        out_data = Sapphire.decrypt(Key.unwrap(keys[name]), nonce, ciphertext, "");
+    /// @notice Decrypts data using a named symmetric key
+    /// @param name_ Name of the key to use for decryption
+    /// @param data_ Encrypted data to decrypt
+    /// @return decryptedData Plaintext bytes
+    function decryptSymKey(
+        string calldata name_,
+        bytes memory data_
+    ) public view onlyAuthorized returns (bytes memory decryptedData) {
+        (bytes32 nonce, bytes memory ciphertext) = abi.decode(data_, (bytes32, bytes));
+        decryptedData = Sapphire.decrypt(Key.unwrap(_keys[name_]), nonce, ciphertext, "");
     }
-
 }

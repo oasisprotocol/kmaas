@@ -1,7 +1,14 @@
 {
   "compilerOptions": {
     "target": "es2020",
-    "module": "NodeNext",
-    "esModuleInterop": false
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "paths": {
+      "@oasisprotocol/sapphire-contracts/*": ["./node_modules/@oasisprotocol/sapphire-contracts/*"]
+    }
   }
 }
