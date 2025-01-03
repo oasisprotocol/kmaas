@@ -11,4 +11,7 @@ interface IErrors {
 
     /// @notice Thrown when operation is attempted with zero address
     error ZeroAddress();
+
+    /// @notice Thrown when an invalid account type is provided
+    error InvalidAccountType();
 }

@@ -72,7 +72,7 @@ contract Account is IAccountBase, Ownable, IErrors {
     /// @inheritdoc IAccountBase
     function signEIP155(
         EIP155Signer.EthTx calldata txToSign
-    ) public view override onlyAuthorized returns (bytes memory) {
+    ) public view virtual override onlyAuthorized returns (bytes memory) {
         return EIP155Signer.sign(publicKey, _privateKey, txToSign);
     }
 

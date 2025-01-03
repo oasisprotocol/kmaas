@@ -1,12 +1,13 @@
 import "@nomicfoundation/hardhat-toolbox"
-// import "@nomicfoundation/hardhat-viem"
+import "@nomicfoundation/hardhat-ethers"
 import "@oasisprotocol/sapphire-hardhat"
 import "dotenv/config"
 import "hardhat-contract-sizer"
 import { HardhatUserConfig } from "hardhat/config"
 import { HDAccountsUserConfig } from "hardhat/types"
 
-import "./tasks/deploy"
+import "./scripts/deploy"
+import "./scripts/generate"
 
 const mnemonic = process.env.MNEMONIC
 if (!mnemonic) {
